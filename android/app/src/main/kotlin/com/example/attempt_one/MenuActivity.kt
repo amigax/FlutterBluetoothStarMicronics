@@ -1,10 +1,13 @@
 /*
+
 Developed By Gareth Murfin www.garethmurfin.com
 This app demonstates printing to Bluetooth Star Micronics printers from
 Flutter. It has only been tested on the SM-T300i Series but most of them
  should work since the code is based on the official SDK.
+
+ THIS IS THE MAIN FILE, IVE LEFT THE REST IN FOR CONVENIENCE IF REQUIRED.
 * */
-package com.example.attempt_one 
+package com.example.attempt_one
 
 import android.Manifest
 import android.content.Intent

@@ -119,16 +119,14 @@ class MenuActivity : AppCompatActivity() {
                     //showDialog("Found printer: ${printer.connectionSettings.identifier}");
                     //GAZ pass this directly into status
                     identifier=printer.connectionSettings.identifier;
-                    //REMOVED FOR NOW GO STRAIGHT TO PRINT status(identifier)
-
-
-
+                    //dont do anythign here do it in onDiscoveryFinished because i dont think
+                    //you can print while its still discovering
                 }
 
                 override fun onDiscoveryFinished() {
                     d("Discovery finished.")
                     //showDialog("Discovery finished.");
-
+                    //REMOVED FOR NOW GO STRAIGHT TO PRINT status(identifier)
                     Handler().postDelayed({
                         print()
                     }, 500)

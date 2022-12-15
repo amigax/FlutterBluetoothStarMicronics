@@ -110,7 +110,7 @@ class MenuActivity : AppCompatActivity() {
                 interfaceTypes,
                 applicationContext
             )
-            _manager?.discoveryTime = 3000//10000 //CAN WE GET THAT LOWER?
+            _manager?.discoveryTime = 3000//10000 //CAN WE GET THAT LOWER? BEbecause it only reliably prints when onDiscoveryFinished is called, 3 sec seems ok so far.
             _manager?.callback = object : StarDeviceDiscoveryManager.Callback {
                 override fun onPrinterFound(printer: StarPrinter) {
                     //editTextDevices.append("${printer.connectionSettings.interfaceType}:${printer.connectionSettings.identifier}\n")

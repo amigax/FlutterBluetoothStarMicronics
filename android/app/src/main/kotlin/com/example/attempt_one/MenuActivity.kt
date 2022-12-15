@@ -15,6 +15,7 @@ import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
@@ -64,12 +65,13 @@ class MenuActivity : AppCompatActivity() {
 
     fun showDialog(message : String)
     {
+        d("showDialog -> "+message)
         MyDialogFragment(message).show(supportFragmentManager,"ARSE");
     }
 
     fun d(message : String)
     {
-        Log.d("ARSE", message);
+        Log.d("TYNEPUNK", "############ "+message);
     }
 
     //DISCOVERY CODE
@@ -85,8 +87,8 @@ class MenuActivity : AppCompatActivity() {
         requestBluetoothPermission()
 
         if (!hasBluetoothPermission()) {
-            d("PERMISSION ERROR: You have to allow Nearby devices to use the Bluetooth printer.")
-            showDialog("PERMISSION ERROR: You have to allow Nearby devices to use the Bluetooth printer.");
+            d("PERMISSION ERROR 1: You have to allow Nearby devices to use the Bluetooth printer.")
+            showDialog("PERMISSION ERROR 1: You have to allow Nearby devices to use the Bluetooth printer.");
             return
         }
 
@@ -108,28 +110,35 @@ class MenuActivity : AppCompatActivity() {
                 interfaceTypes,
                 applicationContext
             )
-            _manager?.discoveryTime = 10000
+            _manager?.discoveryTime = 3000//10000 //CAN WE GET THAT LOWER?
             _manager?.callback = object : StarDeviceDiscoveryManager.Callback {
                 override fun onPrinterFound(printer: StarPrinter) {
                     //editTextDevices.append("${printer.connectionSettings.interfaceType}:${printer.connectionSettings.identifier}\n")
 
                     d("Found printer: ${printer.connectionSettings.identifier}.")
-                    showDialog("Found printer: ${printer.connectionSettings.identifier}");
+                    //showDialog("Found printer: ${printer.connectionSettings.identifier}");
                     //GAZ pass this directly into status
                     identifier=printer.connectionSettings.identifier;
-                    status(identifier)
+                    //REMOVED FOR NOW GO STRAIGHT TO PRINT status(identifier)
+
+
+
                 }
 
                 override fun onDiscoveryFinished() {
                     d("Discovery finished.")
                     //showDialog("Discovery finished.");
+
+                    Handler().postDelayed({
+                        print()
+                    }, 500)
                 }
             }
 
             _manager?.startDiscovery()
         } catch (e: Exception) {
-            d("Error: ${e}")
-
+            d("Error 2: ${e}")
+            e.printStackTrace()
             showDialog("Discovery Error. "+e.message);
         }
     }
@@ -178,8 +187,8 @@ class MenuActivity : AppCompatActivity() {
         // https://developer.android.com/about/versions/12/features/bluetooth-permissions
         if (interfaceType == InterfaceType.Bluetooth || settings.autoSwitchInterface) {
             if (!hasBluetoothPermission()) {
-                d("PERMISSION ERROR: You have to allow Nearby devices to use the Bluetooth printer.")
-                showDialog("PERMISSION ERROR: You have to allow Nearby devices to use the Bluetooth printer.");
+                d("PERMISSION ERROR 2: You have to allow Nearby devices to use the Bluetooth printer.")
+                showDialog("PERMISSION ERROR 2: You have to allow Nearby devices to use the Bluetooth printer.");
                 return
             }
         }
@@ -212,12 +221,13 @@ class MenuActivity : AppCompatActivity() {
                     startMonitor();
                 }
             } catch (e: Exception) {
-                d("Error: ${e}")
-                showDialog("Error 1: ${e}")
+                d("Error 3: ${e}")
+                e.printStackTrace()
+                showDialog("Error 4: ${e}")
                 var message = "";
                 withContext(Dispatchers.Main) {
-                    message += ("Error: ${e}\n\n")
-                    showDialog("Error 2: ${e}")
+                    message += ("Error 5: ${e}\n\n")
+                    showDialog("Error 5: ${e}")
                 }
             } finally {
                 printer.closeAsync().await()
@@ -232,10 +242,12 @@ class MenuActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
 
+        d("onstop")
         val job = SupervisorJob()
         val scope = CoroutineScope(Dispatchers.Default + job)
 
         scope.launch {
+            d("close printer")
             printer?.closeAsync()?.await()
         }
     }
@@ -261,7 +273,7 @@ class MenuActivity : AppCompatActivity() {
         // https://developer.android.com/about/versions/12/features/bluetooth-permissions
         if (interfaceType == InterfaceType.Bluetooth || settings.autoSwitchInterface) {
             if (!hasBluetoothPermission()) {
-                d("PERMISSION ERROR: You have to allow Nearby devices to use the Bluetooth printer.")
+                d("PERMISSION  ERROR 3: You have to allow Nearby devices to use the Bluetooth printer.")
                 return
             }
         }
@@ -276,6 +288,7 @@ class MenuActivity : AppCompatActivity() {
                     super.onCommunicationError(e)
                     d("Printer: Communication Error")
                     d("${e}")
+                    e.printStackTrace()
                     showDialog("Printer: Communication Error. "+e.message);
 
                     scope.launch(Dispatchers.Main) {
@@ -299,6 +312,7 @@ class MenuActivity : AppCompatActivity() {
                 override fun onError() {
                     super.onError()
                     d("Printer: Error")
+
                     showDialog("Printer: Error");
                     scope.launch(Dispatchers.Main) {
                       //  statusTextView.append("Printer: Error\n")
@@ -355,6 +369,7 @@ class MenuActivity : AppCompatActivity() {
                     super.onCommunicationError(e)
                     d( "Drawer: Communication Error")
                     d("error is -> ${e}")
+                    e.printStackTrace()
                     showDialog("Drawer: Communication Error ${e}")
                     scope.launch(Dispatchers.Main) {
                        // statusTextView.append("Drawer: Communication Error\n")
@@ -377,6 +392,7 @@ class MenuActivity : AppCompatActivity() {
                     super.onCommunicationError(e)
                     d( "Input Device: Communication Error")
                     d( "${e}")
+                    e.printStackTrace()
                     showDialog("Input Device: Communication Error")
                     scope.launch(Dispatchers.Main) {
                       //  statusTextView.append("Input Device: Communication Error\n")
@@ -417,6 +433,7 @@ class MenuActivity : AppCompatActivity() {
                     super.onCommunicationError(e)
                     d( "Display: Communication Error")
                     d( "${e}")
+                    e.printStackTrace()
                     showDialog("Display: Communication Error ${e}")
                     scope.launch(Dispatchers.Main) {
                         //statusTextView.append("Display: Communication Error\n")
@@ -451,7 +468,8 @@ class MenuActivity : AppCompatActivity() {
                    // isMonitoring = true
                 }
             } catch (e: Exception) {
-                d( "Error: ${e}")
+                d( "Error 6: ${e}")
+                e.printStackTrace()
                 showDialog("Error b: ${e}")
                 scope.launch(Dispatchers.Main) {
                    // statusTextView.append("Error: ${e}\n")
@@ -481,12 +499,12 @@ class MenuActivity : AppCompatActivity() {
         // If you are using Android 12 and targetSdkVersion is 31 or later,
         // you have to request Bluetooth permission (Nearby devices permission) to use the Bluetooth printer.
         // https://developer.android.com/about/versions/12/features/bluetooth-permissions
-        if (interfaceType == InterfaceType.Bluetooth || settings.autoSwitchInterface) {
+      /*  if (interfaceType == InterfaceType.Bluetooth){/// || settings.autoSwitchInterface) {
             if (!hasBluetoothPermission()) {
                 d("PERMISSION ERROR: You have to allow Nearby devices to use the Bluetooth printer.")
                 return
             }
-        }
+        }*/
         d("Should print now");
         val logo = BitmapFactory.decodeResource(resources, R.drawable.tynepunklogo)//R.drawable.logo_01)
         val coopersmith1 = BitmapFactory.decodeResource(resources, R.drawable.cs)
@@ -592,7 +610,10 @@ class MenuActivity : AppCompatActivity() {
                 d("Printing Success")
             } catch (e: Exception) {
                 d("Printing Error:----- ${e}")
+                e.printStackTrace()
+                printer.closeAsync().await()//we still need to close the lin kdo we ? gaz
             } finally {
+                d("closing printer link")
                 printer.closeAsync().await()
             }
         }

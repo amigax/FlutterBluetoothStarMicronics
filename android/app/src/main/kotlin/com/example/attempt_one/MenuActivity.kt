@@ -17,10 +17,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.attempt_one.R
 import com.starmicronics.stario10.*
@@ -39,6 +36,7 @@ class MenuActivity : AppCompatActivity() {
 
         d("onCreate, this app will now detect printer and print something");
 
+        /*
         val discoveryButton = findViewById<Button>(R.id.discoveryButton)
         val discoveryIntent = Intent(this, DiscoveryActivity::class.java)
         discoveryButton.setOnClickListener { startActivity(discoveryIntent) }
@@ -54,6 +52,12 @@ class MenuActivity : AppCompatActivity() {
         val statusButton = findViewById<Button>(R.id.statusButton)
         val statusIntent = Intent(this, StatusActivity::class.java)
         statusButton.setOnClickListener { startActivity(statusIntent) }
+*/
+        val discovery_Button = findViewById<Button>(R.id.discovery_button)
+        discovery_Button.setOnClickListener { discovery() }
+
+        val printButton = findViewById<Button>(R.id.print_button)
+        printButton.setOnClickListener { print() }
 
         //Gaz hack it so it does what we need automatically, that is :
         //discovery
@@ -77,7 +81,7 @@ class MenuActivity : AppCompatActivity() {
     //DISCOVERY CODE
     private val requestCode = 1000
     private var _manager: StarDeviceDiscoveryManager? = null
-    var identifier="<error>";
+    var identifier="";//""arse";
     fun discovery()
     {
         d("DISCOVERING PRINTER");
@@ -126,10 +130,21 @@ class MenuActivity : AppCompatActivity() {
                 override fun onDiscoveryFinished() {
                     d("Discovery finished.")
                     //showDialog("Discovery finished.");
-                    //REMOVED FOR NOW GO STRAIGHT TO PRINT status(identifier)
-                    Handler().postDelayed({
-                        print()
-                    }, 500)
+
+                    if (identifier.length>0)
+                    {
+                        Toast.makeText(this@MenuActivity, "Discovery finished, found a printer ("+identifier+"). Tap print", Toast.LENGTH_SHORT).show()
+                        //REMOVED FOR NOW GO STRAIGHT TO PRINT status(identifier)
+                        //Handler().postDelayed({
+                        //    print()
+                        //}, 500)
+                        //return;
+                    }
+                    else
+                    {
+                        Toast.makeText(this@MenuActivity, "Discovery finished, no printers found", Toast.LENGTH_SHORT).show()
+                    }
+
                 }
             }
 
@@ -478,7 +493,12 @@ class MenuActivity : AppCompatActivity() {
     //PRINT
 
     private fun print() {
-        d("we will print now");
+        d("we will print now identifier is "+identifier);
+        if (identifier.length==0)
+        {
+            Toast.makeText(this@MenuActivity, "Nothing discovered, can't print", Toast.LENGTH_SHORT).show()
+            return;
+        }
        // val editTextIdentifier = findViewById<EditText>(R.id.editTextIdentifier)
        // val identifier = editTextIdentifier.text.toString().trim()//wow yeh this is important :) gaz.
         d( "identifier is "+identifier);
@@ -510,6 +530,9 @@ class MenuActivity : AppCompatActivity() {
         val job = SupervisorJob()
         val scope = CoroutineScope(Dispatchers.Default + job)
 
+        var printme = getChatLine();
+        Toast.makeText(this@MenuActivity, "Printing: "+printme, Toast.LENGTH_SHORT).show()
+
         scope.launch {
             try {
                 val builder = StarXpandCommandBuilder()
@@ -517,6 +540,10 @@ class MenuActivity : AppCompatActivity() {
                     DocumentBuilder()
                         .addPrinter(
                             PrinterBuilder()
+                                .actionPrintText(
+                                    printme+"\n"
+                                )
+                                    /*
                                 .actionPrintImage(ImageParameter(logo, 406))
                                 .styleInternationalCharacter(InternationalCharacterType.Usa)
                                 .styleCharacterSpace(0.0)
@@ -598,6 +625,8 @@ class MenuActivity : AppCompatActivity() {
                         //gaz
                                 .actionPrintImage(ImageParameter(coopersmith1, 506))
                                 .actionPrintImage(ImageParameter(coopersmith2, 606))
+
+                                     */
                         )
                 )
                 val commands = builder.getCommands()
@@ -615,5 +644,25 @@ class MenuActivity : AppCompatActivity() {
                 printer.closeAsync().await()
             }
         }
+    }
+
+    var counter=-1;
+    fun  getChatLine() : String
+    {
+        counter++;
+        when(counter)
+        {
+            0-> return "Hello, Im your printer, my name is "+identifier;
+            1-> return "Catchy name isn't it?";
+            2-> return "Yes I only need to be discovered, once per session";
+            3-> return "So printing is really easy";
+            4-> return "OK, thats me done!..";
+        }
+
+        if (counter>4)
+        {
+            counter=-1;
+        }
+        return "--- bye! ---";
     }
 }
